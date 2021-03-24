@@ -1,0 +1,38 @@
+config:
+  target: "https://api.todoist.com"
+  processor: "./my-functions.js"
+  phases: 
+    - duration: 30
+      arrivalRate: 3
+      name: "Phase 1"
+  defaults:
+   headers:
+    Authorization: Bearer {{ $processEnvironment.TOKEN }}
+    Content-type: application/json
+scenarios:
+  - flow:
+      - get:
+          url: "/rest/v1/tasks"
+      - function: "createTask"
+      - post:
+          url: "/rest/v1/tasks"
+          json:
+           content: "{{ taskName }}"
+          capture:
+            json: "$.id"
+            as: "id"
+      - log: "Current id is {{ id }}"
+      - log: "Current task name is {{ taskName}}"
+      - get:
+          url: "/rest/v1/tasks/{{ id }}"
+      - post: 
+          url: "/rest/v1/tasks/{{ id }}"
+          json:
+            content: "Update task from artillery"
+      - post: 
+          url: "/rest/v1/tasks/{{ id }}/close"
+      - post:
+          url: "/rest/v1/tasks/{{ id }}/reopen"
+      - delete: 
+          url: "/rest/v1/tasks/{{ id }}"
+            
